@@ -55,7 +55,41 @@ git clone https://github.com/guitengyue/imgshare-manager.git
 cd imgshare-manager
 ```
 
-### 方式一：先构建，再运行
+### 方式一：直接从 GHCR 拉取镜像
+
+镜像地址：
+
+```text
+ghcr.io/guitengyue/imgshare-manager:latest
+```
+
+拉取镜像：
+
+```bash
+docker pull ghcr.io/guitengyue/imgshare-manager:latest
+```
+
+如果你的 `microbin` 和 `imgshare-manager` 在同一个 Docker 网络里，可以这样运行：
+
+```bash
+docker run -d \
+  --name imgshare-manager \
+  --network your-docker-network \
+  -p 8081:8081 \
+  -v /opt/microbin/data:/data \
+  -e MICROBIN_URL=http://microbin:8080 \
+  -e DATABASE_PATH=/data/database.sqlite \
+  -e ATTACHMENTS_PATH=/data/attachments \
+  ghcr.io/guitengyue/imgshare-manager:latest
+```
+
+如果你的 `microbin` 不在同一个 Docker 网络里，就不要写 `http://microbin:8080`，而是改成它实际可访问的地址，例如：
+
+```bash
+-e MICROBIN_URL=http://127.0.0.1:3004
+```
+
+### 方式二：先构建，再运行
 
 先构建镜像：
 
@@ -253,7 +287,10 @@ it means you have not built the image yet:
 docker build -t imgshare-manager:latest .
 ```
 
-This repository currently publishes source code, not a prebuilt image on Docker Hub or GHCR.
+This repository now publishes a prebuilt image to GHCR:
+`ghcr.io/guitengyue/imgshare-manager:latest`
+
+Docker Hub is not configured at the moment, but GHCR is available and is the simplest option for most users.
 
 ## Environment Variables
 
