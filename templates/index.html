@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aguihome 图床</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ea;
+      --card: #fffaf2;
+      --ink: #1e2a2f;
+      --muted: #66757d;
+      --line: #d8cdb8;
+      --accent: #d5662f;
+      --accent-strong: #b14b1a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Noto Serif SC", serif;
+      background:
+        radial-gradient(circle at top left, rgba(213,102,47,.12), transparent 32%),
+        linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(62, 44, 24, .08);
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      font-weight: 700;
+    }
+    p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    input[type="file"], select, button {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+      padding: 14px 16px;
+      font: inherit;
+    }
+    input[type="file"] {
+      padding: 12px;
+    }
+    .grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 22px;
+    }
+    button {
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+    }
+    button:disabled {
+      opacity: .7;
+      cursor: wait;
+      transform: none;
+    }
+    .hint {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .section {
+      margin-top: 28px;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.75);
+      overflow: hidden;
+    }
+    .thumb {
+      aspect-ratio: 4 / 3;
+      background: linear-gradient(135deg, #efe5d3, #fbf7ef);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-fallback {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 18px;
+      text-align: center;
+    }
+    .meta {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+    .name {
+      font-weight: 700;
+      word-break: break-word;
+    }
+    .sub {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .actions a,
+    .actions button {
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    .link-btn {
+      background: #efe4d0;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    .danger {
+      background: #fff1ec;
+      color: #9b3d1f;
+      border: 1px solid #efc3b2;
+      cursor: pointer;
+    }
+    .inline-tools {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .copy-btn {
+      border: 1px dashed var(--line);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Aguihome 图床</h1>
+      <p>上传后会返回公开分享链接。别人直接打开图片网址即可查看，不需要登录。</p>
+      <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="grid">
+          <div>
+            <label for="file">图片文件</label>
+            <input id="file" type="file" name="file" accept="image/*" multiple required>
+          </div>
+          <div>
+            <label for="expiration">保留时间</label>
+            <select id="expiration" name="expiration">
+              {% for value, label, _, _ in expirations %}
+              <option value="{{ value }}" {% if value == default_expiration %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button id="submit-btn" type="submit">上传并生成分享链接</button>
+        </div>
+      </form>
+      <div class="hint">公开图片直链格式：`/file/xxxx`。分享页格式：`/upload/xxxx`。</div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>已分享图片</h2>
+          <div class="sub">按最近上传排序</div>
+        </div>
+        <div class="gallery">
+          {% for item in items %}
+          <div class="item">
+            <a class="thumb" href="{{ item.share_url }}" target="_blank" rel="noreferrer">
+              {% if item.is_image %}
+              <img src="{{ item.file_url }}" alt="{{ item.filename }}">
+              {% else %}
+              <div class="thumb-fallback">无法预览<br>{{ item.filename }}</div>
+              {% endif %}
+            </a>
+            <div class="meta">
+              <div class="name">{{ item.filename }}</div>
+              <div class="sub">上传时间：{{ item.created_at }}</div>
+              <div class="sub">过期时间：{{ item.expiration_at }}</div>
+              <div class="actions">
+                <a class="link-btn" href="{{ item.share_url }}" target="_blank" rel="noreferrer">分享页</a>
+                <a class="link-btn" href="{{ item.file_url }}" target="_blank" rel="noreferrer">图片直链</a>
+              </div>
+              <div class="inline-tools">
+                <button
+                  class="copy-btn"
+                  type="button"
+                  data-copy="{{ request.url_root[:-1] }}{{ item.file_url }}"
+                >复制图片直链</button>
+                <form method="post" action="{{ item.remove_url }}">
+                  <button class="danger" type="submit">删除</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById("upload-form");
+    const button = document.getElementById("submit-btn");
+    const fileInput = document.getElementById("file");
+    form.addEventListener("submit", () => {
+      button.disabled = true;
+      const count = fileInput.files ? fileInput.files.length : 0;
+      button.textContent = count > 1 ? `正在上传 ${count} 张图片...` : "正在上传...";
+    });
+
+    document.querySelectorAll("[data-copy]").forEach((node) => {
+      node.addEventListener("click", async () => {
+        const original = node.textContent;
+        await navigator.clipboard.writeText(node.dataset.copy);
+        node.textContent = "已复制";
+        setTimeout(() => {
+          node.textContent = original;
+        }, 1200);
+      });
+    });
+  </script>
+</body>
+</html>

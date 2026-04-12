@@ -1,0 +1,47 @@
+services:
+  microbin:
+    image: danielszabo99/microbin:2.1.0
+    container_name: microbin
+    restart: always
+    networks:
+      - imgshare
+    volumes:
+      - ./data:/app/microbin_data
+    environment:
+      MICROBIN_TITLE: Aguihome Image Share
+      MICROBIN_DISABLE_TELEMETRY: "true"
+      MICROBIN_DISABLE_UPDATE_CHECKING: "true"
+      MICROBIN_NO_LISTING: "true"
+      MICROBIN_HIDE_FOOTER: "true"
+      MICROBIN_GC_DAYS: "365"
+
+  imgshare-manager:
+    build: .
+    image: imgshare-manager:latest
+    container_name: imgshare-manager
+    restart: always
+    networks:
+      - imgshare
+    volumes:
+      - ./data:/data
+    environment:
+      MICROBIN_URL: http://microbin:8080
+      DATABASE_PATH: /data/database.sqlite
+      ATTACHMENTS_PATH: /data/attachments
+
+  caddy:
+    image: caddy:2.10.2
+    container_name: imgshare-caddy
+    restart: always
+    networks:
+      - imgshare
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data:/data
+      - ./caddy-config:/config
+
+networks:
+  imgshare:

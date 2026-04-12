@@ -1,0 +1,35 @@
+your-domain.com {
+    @protected path / /upload /delete* /remove* /admin*
+    basic_auth @protected {
+        your-username your-bcrypt-password-hash
+    }
+
+    @files path /file/*
+    handle @files {
+        reverse_proxy microbin:8080 {
+            header_down -Content-Disposition
+        }
+    }
+
+    @public_uploads path_regexp public_uploads ^/upload/.+
+    handle @public_uploads {
+        reverse_proxy microbin:8080
+    }
+
+    @delete path /delete/*
+    handle @delete {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    @protected_upload path /upload
+    handle @protected_upload {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    @root path /
+    handle @root {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    reverse_proxy microbin:8080
+}
