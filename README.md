@@ -48,17 +48,27 @@
 
 ## 中文快速开始
 
-构建镜像：
+先拉源码：
+
+```bash
+git clone https://github.com/guitengyue/imgshare-manager.git
+cd imgshare-manager
+```
+
+### 方式一：先构建，再运行
+
+先构建镜像：
 
 ```bash
 docker build -t imgshare-manager:latest .
 ```
 
-单独运行：
+如果你的 `microbin` 和 `imgshare-manager` 在同一个 Docker 网络里，可以这样运行：
 
 ```bash
 docker run -d \
   --name imgshare-manager \
+  --network your-docker-network \
   -p 8081:8081 \
   -v /opt/microbin/data:/data \
   -e MICROBIN_URL=http://microbin:8080 \
@@ -67,11 +77,36 @@ docker run -d \
   imgshare-manager:latest
 ```
 
-使用 Compose：
+如果你的 `microbin` 不在同一个 Docker 网络里，就不要写 `http://microbin:8080`，而是改成它实际可访问的地址，例如：
 
 ```bash
-docker compose up -d
+-e MICROBIN_URL=http://127.0.0.1:3004
 ```
+
+### 方式二：直接用 Compose
+
+这是更推荐的方式，因为 `docker-compose.yml` 已经把 `microbin`、`imgshare-manager` 和 `caddy` 放在同一个网络里了：
+
+```bash
+docker compose up -d --build
+```
+
+### 常见报错说明
+
+如果你看到：
+
+```text
+Unable to find image 'imgshare-manager:latest' locally
+docker: Error response from daemon: pull access denied for imgshare-manager
+```
+
+这表示你还没有先执行：
+
+```bash
+docker build -t imgshare-manager:latest .
+```
+
+因为当前发布到 GitHub 的是源码仓库，不是已经上传到 Docker Hub / GHCR 的现成镜像。
 
 ## 中文环境变量
 
@@ -140,17 +175,27 @@ It adds the missing management layer for a practical self-hosted image sharing s
 
 ## Quick Start
 
+Clone the repository first:
+
+```bash
+git clone https://github.com/guitengyue/imgshare-manager.git
+cd imgshare-manager
+```
+
+### Option 1: Build first, then run
+
 Build the image:
 
 ```bash
 docker build -t imgshare-manager:latest .
 ```
 
-Run standalone:
+If `microbin` and `imgshare-manager` are on the same Docker network, run it like this:
 
 ```bash
 docker run -d \
   --name imgshare-manager \
+  --network your-docker-network \
   -p 8081:8081 \
   -v /opt/microbin/data:/data \
   -e MICROBIN_URL=http://microbin:8080 \
@@ -159,11 +204,36 @@ docker run -d \
   imgshare-manager:latest
 ```
 
-Run with Compose:
+If `microbin` is not on the same Docker network, do not use `http://microbin:8080`. Use a real reachable URL instead, for example:
 
 ```bash
-docker compose up -d
+-e MICROBIN_URL=http://127.0.0.1:3004
 ```
+
+### Option 2: Use Compose
+
+This is the recommended path because `docker-compose.yml` already puts `microbin`, `imgshare-manager`, and `caddy` on the same Docker network:
+
+```bash
+docker compose up -d --build
+```
+
+### Common Error
+
+If you see:
+
+```text
+Unable to find image 'imgshare-manager:latest' locally
+docker: Error response from daemon: pull access denied for imgshare-manager
+```
+
+it means you have not built the image yet:
+
+```bash
+docker build -t imgshare-manager:latest .
+```
+
+This repository currently publishes source code, not a prebuilt image on Docker Hub or GHCR.
 
 ## Environment Variables
 
