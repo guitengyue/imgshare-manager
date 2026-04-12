@@ -127,6 +127,26 @@ docker build -t imgshare-manager:latest .
 
 这个项目本身不替代 `MicroBin`，而是给它补上一层更适合个人图床场景的管理界面。
 
+## 中文镜像发布
+
+仓库已经包含 GitHub Actions 工作流，会在以下情况自动发布镜像到 GHCR：
+
+- 推送到 `main`
+- 推送形如 `v1.0.0` 的 tag
+- 手动触发工作流
+
+镜像地址格式：
+
+```text
+ghcr.io/guitengyue/imgshare-manager:latest
+```
+
+如果你要手动拉取：
+
+```bash
+docker pull ghcr.io/guitengyue/imgshare-manager:latest
+```
+
 ---
 
 ## English Overview
@@ -253,3 +273,23 @@ This repository currently publishes source code, not a prebuilt image on Docker 
 ## Notes
 
 This project does not replace `MicroBin`. It adds a more practical management layer for personal image-hosting workflows.
+
+## Image Publishing
+
+This repository includes a GitHub Actions workflow that automatically publishes the Docker image to GHCR when:
+
+- code is pushed to `main`
+- a tag like `v1.0.0` is pushed
+- the workflow is triggered manually
+
+Image name:
+
+```text
+ghcr.io/guitengyue/imgshare-manager:latest
+```
+
+You can pull it with:
+
+```bash
+docker pull ghcr.io/guitengyue/imgshare-manager:latest
+```
