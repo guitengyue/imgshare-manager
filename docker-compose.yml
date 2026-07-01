@@ -15,7 +15,10 @@ services:
       MICROBIN_DISABLE_UPDATE_CHECKING: "true"
       MICROBIN_NO_LISTING: "true"
       MICROBIN_HIDE_FOOTER: "true"
-      MICROBIN_GC_DAYS: "365"
+      MICROBIN_ETERNAL_PASTA: "true"
+      MICROBIN_DEFAULT_EXPIRY: "never"
+      MICROBIN_MAX_EXPIRY: "never"
+      MICROBIN_GC_DAYS: "0"
 
   imgshare-manager:
     build: .
@@ -31,6 +34,7 @@ services:
       DATABASE_PATH: /data/database.sqlite
       ATTACHMENTS_PATH: /data/attachments
       THUMBNAILS_PATH: /data/imgshare-thumbnails
+      TRASH_PATH: /data/imgshare-trash
       HOME_IMAGE_LIMIT: "10"
       IMAGE_INDEX_TTL_SECONDS: "300"
       STATS_CACHE_SECONDS: "300"

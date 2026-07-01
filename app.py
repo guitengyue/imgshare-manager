@@ -3,31 +3,35 @@ import shutil
 import sqlite3
 import time
 import json
+import mimetypes
 from datetime import datetime
 from pathlib import Path
 
 import requests
 from PIL import Image, ImageOps, UnidentifiedImageError
 from flask import abort, Flask, redirect, render_template, request, send_file, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 MICROBIN_URL = os.environ.get("MICROBIN_URL", "http://microbin:8080").rstrip("/")
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "/data/database.sqlite")
 
 EXPIRATIONS = [
-    ("3days", "3 天", 3 * 24 * 60 * 60, "3days"),
-    ("30days", "30 天", 30 * 24 * 60 * 60, "1week"),
-    ("3months", "3 个月", 90 * 24 * 60 * 60, "1week"),
-    ("6months", "6 个月", 180 * 24 * 60 * 60, "1week"),
-    ("1year", "1 年", 365 * 24 * 60 * 60, "1week"),
-    ("3years", "3 年", 3 * 365 * 24 * 60 * 60, "1week"),
+    ("3days", "3 天", 3 * 24 * 60 * 60, "never"),
+    ("30days", "30 天", 30 * 24 * 60 * 60, "never"),
+    ("3months", "3 个月", 90 * 24 * 60 * 60, "never"),
+    ("6months", "6 个月", 180 * 24 * 60 * 60, "never"),
+    ("1year", "1 年", 365 * 24 * 60 * 60, "never"),
+    ("3years", "3 年", 3 * 365 * 24 * 60 * 60, "never"),
 ]
 
 EXPIRATION_MAP = {item[0]: item for item in EXPIRATIONS}
 ATTACHMENTS_PATH = os.environ.get("ATTACHMENTS_PATH", "/data/attachments")
 THUMBNAILS_PATH = os.environ.get("THUMBNAILS_PATH", "/data/imgshare-thumbnails")
+TRASH_PATH = os.environ.get("TRASH_PATH", "/data/imgshare-trash")
 DEFAULT_TOPIC = "未分类"
 DEFAULT_HOME_IMAGE_LIMIT = 10
 THUMBNAIL_MAX_SIZE = (480, 360)
@@ -390,6 +394,26 @@ def item_from_index_row(row: sqlite3.Row) -> dict:
     }
 
 
+def indexed_image_by_slug(slug: str) -> dict | None:
+    sync_image_index()
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        ensure_metadata_table(conn)
+        row = conn.execute(
+            """
+            SELECT i.*, COALESCE(t.topic, ?) AS topic
+            FROM imgshare_images i
+            LEFT JOIN imgshare_topics t ON t.pasta_id = i.pasta_id
+            WHERE i.slug = ?
+            """,
+            (DEFAULT_TOPIC, slug),
+        ).fetchone()
+
+    if row is None:
+        return None
+    return item_from_index_row(row)
+
+
 def indexed_images_page(selected_topic: str | None, page: int, page_size: int) -> tuple[list[dict], int]:
     sync_image_index()
     selected_topic = normalize_topic(selected_topic) if selected_topic else None
@@ -515,7 +539,15 @@ def delete_image_by_slug(slug: str) -> None:
         conn.commit()
 
     if folder.exists() and folder.is_dir():
-        shutil.rmtree(folder, ignore_errors=True)
+        trash_root = Path(TRASH_PATH)
+        trash_root.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        target = trash_root / f"{timestamp}_{slug}"
+        suffix = 1
+        while target.exists():
+            suffix += 1
+            target = trash_root / f"{timestamp}_{slug}_{suffix}"
+        shutil.move(str(folder), str(target))
     delete_thumbnail(slug)
 
 
@@ -528,10 +560,11 @@ def get_topics() -> list[str]:
         ensure_metadata_table(conn)
         rows = conn.execute(
             """
-            SELECT DISTINCT topic
-            FROM imgshare_topics
-            WHERE topic IS NOT NULL AND trim(topic) <> ''
-            ORDER BY topic COLLATE NOCASE
+            SELECT DISTINCT t.topic
+            FROM imgshare_topics t
+            JOIN imgshare_images i ON i.pasta_id = t.pasta_id
+            WHERE t.topic IS NOT NULL AND trim(t.topic) <> ''
+            ORDER BY t.topic COLLATE NOCASE
             """
         ).fetchall()
 
@@ -587,6 +620,12 @@ def update_expiration(filename: str, file_size: int, desired_seconds: int) -> in
             "UPDATE pasta SET expiration = ? WHERE id = ?",
             (expiration, pasta_id),
         )
+        updated = cur.execute(
+            "SELECT created, expiration FROM pasta WHERE id = ?",
+            (pasta_id,),
+        ).fetchone()
+        if updated is None or updated[1] - updated[0] < desired_seconds - 60:
+            raise RuntimeError("uploaded row expiration was not extended correctly")
         conn.commit()
         return pasta_id
 
@@ -816,6 +855,30 @@ def thumbnail(slug: str):
         return redirect(f"/file/{slug}", code=302)
 
     return send_file(thumbnail_path, mimetype="image/jpeg", conditional=True, max_age=86400)
+
+
+@app.get("/file/<slug>")
+def file_direct(slug: str):
+    source_path = source_file_for_slug(slug)
+    if source_path is None:
+        abort(404)
+
+    mimetype, _ = mimetypes.guess_type(source_path.name)
+    return send_file(
+        source_path,
+        mimetype=mimetype or "application/octet-stream",
+        conditional=True,
+        max_age=86400,
+    )
+
+
+@app.get("/upload/<slug>")
+def share_page(slug: str):
+    source_path = source_file_for_slug(slug)
+    item = indexed_image_by_slug(slug)
+    if source_path is None or item is None:
+        abort(404)
+    return render_template("share.html", item=item)
 
 
 @app.post("/upload")

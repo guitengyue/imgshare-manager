@@ -10,14 +10,14 @@ your-domain.com {
 
     @files path /file/*
     handle @files {
-        reverse_proxy microbin:8080 {
+        reverse_proxy imgshare-manager:8081 {
             header_down -Content-Disposition
         }
     }
 
     @public_uploads path_regexp public_uploads ^/upload/.+
     handle @public_uploads {
-        reverse_proxy microbin:8080
+        reverse_proxy imgshare-manager:8081
     }
 
     @delete path /delete/*
@@ -56,6 +56,6 @@ your-domain.com {
     }
 
     handle {
-        reverse_proxy microbin:8080
+        respond 404
     }
 }
