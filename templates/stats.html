@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图床数据统计</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ea;
+      --card: #fffaf2;
+      --ink: #1e2a2f;
+      --muted: #66757d;
+      --line: #d8cdb8;
+      --accent: #d5662f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Noto Serif SC", serif;
+      background:
+        radial-gradient(circle at top left, rgba(213,102,47,.12), transparent 32%),
+        linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 860px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(62, 44, 24, .08);
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+    p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .back {
+      display: inline-flex;
+      margin-bottom: 18px;
+      text-decoration: none;
+      border-radius: 999px;
+      background: #efe4d0;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 22px 0;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.75);
+      padding: 18px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .metric .value {
+      font-size: 32px;
+      font-weight: 700;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--line);
+    }
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      word-break: break-word;
+    }
+    th {
+      color: var(--muted);
+      font-size: 14px;
+      background: #fbf5ea;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .num {
+      text-align: right;
+      white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+      .summary {
+        grid-template-columns: 1fr;
+      }
+      .metric .value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <a class="back" href="/">返回图床首页</a>
+      <h1>图床数据统计</h1>
+      <p>这里统计当前图床里已经保存的图片数量和实际占用容量。{% if stats.cached_at %}统计缓存时间：{{ stats.cached_at }}。{% endif %}</p>
+
+      <div class="summary">
+        <div class="metric">
+          <div class="label">照片总数</div>
+          <div class="value">{{ stats.total_count }} 张</div>
+        </div>
+        <div class="metric">
+          <div class="label">占用容量</div>
+          <div class="value">{{ stats.total_size_label }}</div>
+        </div>
+      </div>
+
+      <h2>按主题 / 文件夹统计</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>主题 / 文件夹</th>
+            <th class="num">照片数</th>
+            <th class="num">占用容量</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in stats.topic_rows %}
+          <tr>
+            <td>{{ row.topic }}</td>
+            <td class="num">{{ row.count }} 张</td>
+            <td class="num">{{ row.size_label }}</td>
+          </tr>
+          {% endfor %}
+          {% if not stats.topic_rows %}
+          <tr>
+            <td colspan="3">暂时还没有图片。</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

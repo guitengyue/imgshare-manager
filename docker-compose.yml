@@ -1,3 +1,5 @@
+version: "2.2"
+
 services:
   microbin:
     image: danielszabo99/microbin:2.1.0
@@ -28,6 +30,10 @@ services:
       MICROBIN_URL: http://microbin:8080
       DATABASE_PATH: /data/database.sqlite
       ATTACHMENTS_PATH: /data/attachments
+      THUMBNAILS_PATH: /data/imgshare-thumbnails
+      HOME_IMAGE_LIMIT: "10"
+      IMAGE_INDEX_TTL_SECONDS: "300"
+      STATS_CACHE_SECONDS: "300"
 
   caddy:
     image: caddy:2.10.2

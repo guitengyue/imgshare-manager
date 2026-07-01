@@ -12,9 +12,10 @@
 - 图片分享页和图片直链可以公开访问
 - 图片直链直接显示，不强制下载
 - 上传页支持一次多张上传
-- 默认保留时间为 3 个月，并扩展了 3/6/12 个月选项
-- 首页带“已分享图片”管理界面
-- 支持复制图片直链和删除图片
+- 默认保留时间为 3 个月，可选 3 天、30 天、3 个月、6 个月、1 年、3 年
+- 首页带“已分享图片”管理界面，支持分页和每页数量选择
+- 支持复制图片直链、单张删除和批量删除
+- 首页使用图片索引分页和缩略图缓存，图片多时也更轻快
 
 ## 中文架构
 
@@ -43,8 +44,11 @@
 - 公开图片直链
 - 多图上传
 - 图片列表管理
+- 缩略图预览
+- 后端索引分页
+- 统计缓存
 - 自定义保留时间
-- 删除图片
+- 删除图片和批量删除
 
 ## 中文快速开始
 
@@ -150,6 +154,18 @@ docker build -t imgshare-manager:latest .
   - 默认：`/data/database.sqlite`
 - `ATTACHMENTS_PATH`
   - 默认：`/data/attachments`
+- `THUMBNAILS_PATH`
+  - 默认：`/data/imgshare-thumbnails`
+  - 首页缩略图缓存目录。
+- `HOME_IMAGE_LIMIT`
+  - 默认：`10`
+  - 首页“已分享图片”默认每页显示 10 张，支持在页面上切换每页 10 / 20 / 50 / 100 张，避免图片过多导致页面卡顿。
+- `IMAGE_INDEX_TTL_SECONDS`
+  - 默认：`300`
+  - 图片索引刷新间隔。首页分页优先读取索引表，不会每次打开都扫描附件目录。
+- `STATS_CACHE_SECONDS`
+  - 默认：`300`
+  - 数据统计页面缓存时间，避免频繁全量统计。
 
 ## 中文访问方式
 
@@ -193,9 +209,10 @@ It adds the missing management layer for a practical self-hosted image sharing s
 - Public share pages and direct image links
 - Direct image links rendered inline instead of forcing downloads
 - Multi-file upload support
-- Default retention set to 3 months, with 3/6/12 month options
-- Built-in shared image management page
-- Copy direct links and delete images from the UI
+- Default retention is 3 months, with 3-day, 30-day, 3-month, 6-month, 1-year, and 3-year options
+- Built-in shared image management page with pagination and page-size selection
+- Copy direct links, delete individual images, and bulk delete images from the UI
+- Indexed pagination and cached thumbnails keep large galleries responsive
 
 ## Architecture
 
@@ -300,6 +317,18 @@ Docker Hub is not configured at the moment, but GHCR is available and is the sim
   - default: `/data/database.sqlite`
 - `ATTACHMENTS_PATH`
   - default: `/data/attachments`
+- `THUMBNAILS_PATH`
+  - default: `/data/imgshare-thumbnails`
+  - Cache directory for home-page thumbnails.
+- `HOME_IMAGE_LIMIT`
+  - default: `10`
+  - The home page shows 10 shared images per page by default. The UI supports 10 / 20 / 50 / 100 images per page to keep large galleries responsive.
+- `IMAGE_INDEX_TTL_SECONDS`
+  - default: `300`
+  - Image index refresh interval. Home-page pagination reads the index first instead of scanning the attachments directory on every request.
+- `STATS_CACHE_SECONDS`
+  - default: `300`
+  - Stats page cache duration.
 
 ## URLs
 

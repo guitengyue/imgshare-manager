@@ -1,7 +1,11 @@
 your-domain.com {
-    @protected path / /upload /delete* /remove* /admin*
+    @protected path / /stats /upload /delete* /renew* /topic* /bulk* /remove* /admin*
     basic_auth @protected {
         your-username your-bcrypt-password-hash
+    }
+
+    handle /thumb* {
+        reverse_proxy imgshare-manager:8081
     }
 
     @files path /file/*
@@ -21,6 +25,26 @@ your-domain.com {
         reverse_proxy imgshare-manager:8081
     }
 
+    @renew path /renew/*
+    handle @renew {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    @topic path /topic/*
+    handle @topic {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    @bulk path /bulk
+    handle @bulk {
+        reverse_proxy imgshare-manager:8081
+    }
+
+    @stats path /stats
+    handle @stats {
+        reverse_proxy imgshare-manager:8081
+    }
+
     @protected_upload path /upload
     handle @protected_upload {
         reverse_proxy imgshare-manager:8081
@@ -31,5 +55,7 @@ your-domain.com {
         reverse_proxy imgshare-manager:8081
     }
 
-    reverse_proxy microbin:8080
+    handle {
+        reverse_proxy microbin:8080
+    }
 }
